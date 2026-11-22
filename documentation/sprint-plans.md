@@ -1,175 +1,190 @@
-# 2. HOSTELCONNECT SPRINT PLANS AND PROJECT ACTIVITY SCHEDULE
+# HOSTELCONNECT SPRINT PLANS AND PROJECT ACTIVITY SCHEDULE
 
-## 2.1 Introduction
+## 1. Introduction
 
-The Sprint Plans document explains how the HostelConnect project is organised and developed within the eight-week project period.
+HostelConnect follows an Agile development approach to organise project activities into manageable stages. The project is scheduled for eight weeks and divided into three sprints.
 
-The project follows the **Agile development approach**, which divides software development into smaller periods called sprints. Each sprint has specific goals, activities and expected deliverables.
+Each sprint has specific objectives, activities, expected deliverables and review points. This approach allows the team to monitor progress, identify challenges early and improve the system throughout development.
 
-HostelConnect is organised into three sprints, covering project planning, system development, testing and final submission.
+## 2. Project Scope
 
-## 2.2 Project Scope and Core Features
+The project focuses on four core features:
 
-HostelConnect is a multi-university web-based hostel booking system designed to connect students with private hostel accommodation around AAMUSTED, KNUST and KTU.
+1. User Management – registration, authentication and role-based access for students, hostel owners and administrators.
+2. Hostel Discovery – searching, filtering and viewing hostel information, room details and prices.
+3. Room Booking – checking room availability and making semester-based bookings.
+4. Payment and Booking Confirmation – initiating payments through Paystack Sandbox, verifying payment responses and displaying booking status.
 
-The system focuses on four main features:
+The system uses PHP and MySQL/MariaDB for its implementation. Paystack Sandbox is used for simulated payment integration.
 
-1. **User Management:** Allows students and hostel owners to register, log in and access functions according to their roles.
-2. **Hostel Discovery:** Allows students to search for hostels, view accommodation details and filter available listings.
-3. **Room Booking:** Enables students to select available rooms and make reservations. Accommodation prices are calculated per semester.
-4. **Payment and Booking Confirmation:** Supports simulated payments through Paystack Sandbox and confirms transactions after successful verification.
+## 3. Sprint Overview
 
-These features define the main scope of the project and guide the development activities.
+| Sprint | Duration | Main Focus |
+|---|---|---|
+| Sprint 1 | Weeks 1–3 | Requirements, planning and project foundation |
+| Sprint 2 | Weeks 4–6 | Core system development and integration |
+| Sprint 3 | Weeks 7–8 | Testing, stabilisation and final submission |
 
-## 2.3 Team Roles and Rotation
+## 4. Sprint 1: Requirements, Planning and Foundation
 
-The project requires team members to rotate responsibilities every three weeks. The main roles are:
+**Duration:** Weeks 1–3
 
-**Project Manager:** Coordinates project activities, assigns tasks, monitors deadlines and ensures that the team follows the agreed project plan.
+### Objectives
+- Understand the problem HostelConnect is intended to solve.
+- Define the system requirements and project scope.
+- Establish the development environment and GitHub repository.
+- Design the initial system structure and database.
 
-**Lead Developer:** Guides the technical development of the system, coordinates PHP and MySQL integration and ensures that the application functions correctly.
+### Planned Activities
+- Discuss the problem and identify intended users.
+- Gather and document functional and non-functional requirements.
+- Prepare the Software Requirements Specification (SRS).
+- Identify the system actors and use cases.
+- Develop initial UML and database designs.
+- Create the GitHub repository and agree on contribution procedures.
+- Assign team responsibilities and establish the sprint schedule.
 
-**Tester:** Checks the system against its requirements, prepares test cases, identifies errors and verifies corrections. The role also includes ensuring that at least one automated test is completed.
+### Expected Deliverables
+- Approved project scope.
+- Initial SRS document.
+- Use case and database designs.
+- GitHub repository.
+- Initial project schedule and risk register.
 
-**Documentation Lead:** Prepares and maintains project documents, including the SRS, Risk Register, Sprint Plans, UML diagrams, Test Plan and Final Project Report.
+## 5. Sprint 2: Core Development and Integration
 
-All members are expected to contribute to the shared GitHub repository and participate in the project activities.
+**Duration:** Weeks 4–6
 
-## 2.4 Development Sprints
+### Objectives
+- Implement the main HostelConnect modules.
+- Connect the application to the database.
+- Integrate the external payment sandbox.
+- Ensure that the core features work together.
 
-### Sprint 1 — Weeks 1–3: Requirements, Planning and Foundation
+### Planned Activities
+- Develop user registration, login and role-based access.
+- Implement hostel listing, searching and filtering.
+- Develop room and availability management.
+- Implement semester-based room booking.
+- Integrate Paystack Sandbox for simulated payments.
+- Implement payment verification and booking confirmation.
+- Connect the application modules to the database.
+- Review code changes through GitHub.
 
-**Goal:** Establish the foundation of HostelConnect before the main development begins.
-
-During this sprint, the team identifies the accommodation problem, defines the target users and agrees on the project requirements and scope.
-
-The team prepares the Software Requirements Specification (SRS), identifies user roles, plans the PHP and MySQL application structure and prepares the initial database design.
-
-The GitHub repository is also established to support collaboration, while preliminary user-interface designs and the initial Risk Register are prepared.
-
-**Expected Deliverables:**
-
-- Agreed project scope and requirements.
-- Initial Software Requirements Specification.
-- Initial database and system design.
-- GitHub repository and collaboration structure.
-- Preliminary user-interface designs.
-- Initial Risk Register.
-- Sprint plan.
-
-### Sprint 2 — Weeks 4–6: Core Development and Integration
-
-**Goal:** Develop the main HostelConnect features and integrate them into a working application.
-
-During this sprint, the developers implement user registration, login and role-based access. The hostel discovery functions are developed to allow students to search and view accommodation information.
-
-The team also implements room booking, semester-based pricing and the relevant hostel and room management functions included in the agreed system scope.
-
-Paystack Sandbox is connected to support simulated payment transactions. The PHP modules are integrated with the MySQL database to ensure that information is properly stored and retrieved.
-
-GitHub feature branches and pull requests are used to review and integrate contributions. Developers also test their individual modules and update the technical documentation.
-
-**Expected Deliverables:**
-
-- User-management functionality.
-- Hostel-discovery functionality.
-- Hostel and room-management functions included in the system.
-- Room-booking functionality.
-- Semester-based pricing.
+### Expected Deliverables
+- Working application modules.
+- Database-connected system.
+- Functional booking workflow.
 - Paystack Sandbox integration.
-- Database-connected application modules.
-- Integrated system components.
+- Updated source code in the GitHub repository.
 
-### Sprint 3 — Weeks 7–8: Testing, Stabilisation and Final Submission
+## 6. Sprint 3: Testing, Stabilisation and Final Submission
 
-**Goal:** Test the application, correct identified errors and prepare the final project deliverables.
+**Duration:** Weeks 7–8
 
-During this sprint, the Tester evaluates the main system functions, including registration, login, hostel discovery, room booking, pricing and payment processing.
+### Objectives
+- Verify that the system meets its requirements.
+- Identify and resolve defects.
+- Finalise project documentation.
+- Prepare the demonstration and submission materials.
 
-The team checks whether the system prevents conflicting bookings and verifies payment results correctly.
+### Planned Activities
+- Conduct functional and integration testing.
+- Test user authentication and role permissions.
+- Test room availability and booking processes.
+- Test semester-based pricing calculations.
+- Test payment responses using Paystack Sandbox.
+- Record test results and resolve identified defects.
+- Review the SRS, UML diagrams, risk register and sprint plans.
+- Prepare the final project report.
+- Prepare the ten-minute system demonstration.
+- Confirm that each team member has contributed to the GitHub repository.
+- Prepare individual reflection submissions.
 
-At least one automated test is developed and executed. Test results and identified defects are recorded, while developers correct errors and the Tester conducts retesting.
-
-The team also checks the application's responsiveness on desktop and mobile devices and finalises the required UML diagrams, including the Use Case, Class and Sequence diagrams.
-
-All project documentation is completed, GitHub contributions are verified and preparations are made for the 10-minute system demonstration.
-
-Each member also prepares an individual one-page reflection connecting their project experience to at least two course units.
-
-**Expected Deliverables:**
-
+### Expected Deliverables
 - Tested and stabilised application.
-- Completed Test Plan and Test Results.
-- Evidence of at least one automated test.
-- Final UML diagrams.
-- Completed SRS, Risk Register and Sprint Plans.
-- Final Project Report.
-- GitHub contributions from every member.
-- 10-minute project demonstration.
+- Test plan and test results.
+- Final SRS and UML/design documentation.
+- Updated risk register and sprint plans.
+- Final project report.
+- Ten-minute demonstration.
 - Individual reflections.
 
-## 2.5 Sprint Activities and Project Controls
+## 7. Team Roles and Responsibilities
 
-The team uses regular project management activities to monitor progress throughout the development period.
+Team responsibilities rotate every three weeks, as required by the project arrangement.
 
-**Sprint Planning** establishes the goals, tasks and responsibilities for each sprint.
+| Role | Main Responsibilities |
+|---|---|
+| Project Manager | Coordinates activities, monitors progress and manages project communication. |
+| Lead Developer | Oversees technical implementation, code quality and system integration. |
+| Tester | Prepares and performs tests, records results and reports defects. |
+| Documentation Lead | Maintains project documentation and ensures that it reflects the system. |
 
-**Progress Reviews** help the Project Manager monitor completed tasks, outstanding activities and challenges.
+All members are expected to contribute to the project, communicate progress and participate in reviews.
 
-**GitHub Code Reviews** allow members to examine contributions before they are merged into the main branch.
+## 8. Sprint Monitoring and Control
 
-**Testing** is conducted throughout development to identify and correct errors early.
+The team will monitor project progress using the following practices:
 
-**Sprint Reviews** assess whether the objectives of each sprint have been achieved.
+- Sprint Planning: Define the tasks and expected outcomes before each sprint.
+- Task Tracking: Monitor assigned tasks and their completion status.
+- GitHub Collaboration: Use commits, branches and pull requests to manage contributions.
+- Code Review: Review changes before integrating them into the main branch.
+- Testing: Verify implemented features and record identified defects.
+- Sprint Review: Evaluate completed work against the sprint objectives.
+- Retrospective: Identify challenges and improvements for the next sprint.
 
-**Sprint Retrospectives** allow members to identify what worked well and what should be improved.
+## 9. Definition of Done
 
-**Documentation Updates** ensure that project documents remain consistent with the actual system.
+A task or feature is considered complete when:
 
-## 2.6 Definition of Done
+1. The required functionality has been implemented.
+2. The feature works with the appropriate database components.
+3. Relevant tests have been performed.
+4. Identified critical defects have been addressed.
+5. Changes have been committed to the GitHub repository.
+6. Relevant documentation has been updated.
 
-The Definition of Done establishes the conditions that must be met before a task is considered complete.
+## 10. Project Tracking
 
-For HostelConnect, a task is considered complete when it meets the agreed requirements, has been tested, committed to the appropriate GitHub branch, reviewed and successfully integrated into the project.
+The team will use GitHub to track project activities, manage source-code contributions and review changes.
 
-Relevant documentation must also be updated where necessary.
+Task status should be recorded accurately using appropriate descriptions such as:
 
-This ensures that completed work is functional, properly reviewed and ready for integration.
+- Not Started
+- In Progress
+- Under Review
+- Completed
+- Blocked
 
-## 2.7 Sprint Tracking and Progress Monitoring
+A task should only be marked as completed when its expected output has been delivered and reviewed.
 
-Sprint tracking helps the team monitor the progress of assigned activities.
+## 11. Submission Readiness
 
-Each task is recorded with its responsible member, planned completion date, actual completion date and current status.
+Before final submission, the team will verify that the following items are available:
 
-Tasks may be marked as not started, in progress, blocked or completed.
+- GitHub repository containing contributions from all team members.
+- Final Software Requirements Specification.
+- UML diagrams and design documentation.
+- Test plan and test results, including at least one automated test.
+- Project risk register.
+- Sprint plans.
+- Working system demonstration.
+- Individual one-page reflections linked to at least two course units.
 
-Evidence such as GitHub commits, pull requests, completed documents and test results is used to confirm the work carried out by each member.
+## 12. Relationship Between Sprint Plans and Risk Management
 
-This helps the Project Manager monitor progress and maintain accountability.
+The sprint plans and risk register work together to support effective project management.
 
-## 2.8 Submission Readiness
+The sprint plans organise the work into stages, while the risk register identifies possible challenges that could affect the project.
 
-Before the final submission in Week 8, the team ensures that all required project deliverables are complete and properly organised.
+Risks such as delayed tasks, database inconsistencies, booking conflicts, payment verification problems and GitHub merge conflicts should be monitored throughout the development process.
 
-These include the GitHub repository, SRS, UML diagrams, Test Plan, Test Results, Risk Register, Sprint Plans and Final Project Report.
+When a risk occurs, the team should record the issue, identify its impact and apply the appropriate mitigation strategy.
 
-The team must also provide evidence of at least one automated test, prepare the 10-minute demonstration and ensure that every member submits an individual reflection linked to at least two course units.
+## 13. Conclusion
 
-## 2.9 Conclusion
+The HostelConnect sprint plan provides a structured approach to completing the project within the eight-week development period. Dividing the work into three sprints helps the team organise requirements analysis, system development, testing and final submission.
 
-The HostelConnect Sprint Plans provide a structured approach to completing the project within eight weeks.
-
-Sprint 1 focuses on requirements and planning, Sprint 2 focuses on development and integration, while Sprint 3 focuses on testing, documentation and final submission.
-
-Following this structure helps the team organise responsibilities, monitor progress and deliver a system that meets the agreed project requirements.
-
-## 2.10 Relationship Between the Risk Register and Sprint Plans
-
-The Risk Register and Sprint Plans support each other throughout the HostelConnect project.
-
-The Sprint Plans describe the activities, timelines, responsibilities and expected deliverables, while the Risk Register identifies possible challenges and the measures for managing them.
-
-For example, during system development, the team must address the risk of overlapping room bookings. During testing, it must also address the risk of incorrect payment verification.
-
-Together, these documents help the team organise its work, manage potential problems and improve the successful delivery of HostelConnect.
+Continuous communication, GitHub collaboration, testing and documentation updates will support the successful delivery of the HostelConnect system.
