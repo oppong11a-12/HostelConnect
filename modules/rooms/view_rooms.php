@@ -266,6 +266,10 @@ if (empty($_SESSION['csrf_token'])) {
             + Add New Room
         </a>
 
+        <a href="/HostelConnect/index.php" class="add-btn">
+            ← Back to Home
+        </a>
+
     </div>
 
     <?php if ($success): ?>

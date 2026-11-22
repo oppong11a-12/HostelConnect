@@ -76,7 +76,7 @@ CREATE TABLE bookings (
         'Confirmed',
         'Cancelled',
         'Completed'
-    ) DEFAULT 'Pending',
+    ) NOT NULL DEFAULT 'Pending',
     booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_booking_student
@@ -104,7 +104,7 @@ CREATE TABLE payments (
         'Pending',
         'Successful',
         'Failed'
-    ) DEFAULT 'Pending',
+    ) NOT NULL DEFAULT 'Pending',
     payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_payment_booking
