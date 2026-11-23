@@ -68,7 +68,7 @@ Paystack Sandbox testing is included as a planned integration test, subject to c
 
 ## 3. Testing Environment
 
-The following environment is intended for testing HostelConnect.
+The following environment is used for testing HostelConnect.
 
 | Component | Description |
 |---|---|
@@ -83,6 +83,7 @@ The following environment is intended for testing HostelConnect.
 | Database Administration | phpMyAdmin |
 | Web Browser | Google Chrome |
 | Version Control | Git and GitHub |
+| Automated Testing Framework | PHPUnit 11.5.58 |
 
 ## 4. Testing Strategy
 
@@ -252,91 +253,108 @@ Feedback from participants should be documented and used to improve the applicat
 
 ## 9. Automated Testing
 
-Automated testing will be used to reduce repetitive manual testing and improve the reliability of software verification.
+Automated testing is used to verify important system functions and reduce repetitive manual testing.
 
-### 9.1 Proposed Testing Tool
+### 9.1 Testing Framework
 
-**PHPUnit** is proposed as the automated testing framework for HostelConnect.
+PHPUnit 11.5.58 was used as the automated testing framework.
 
-### 9.2 Proposed Automated Test Areas
+Testing environment:
 
-- User input validation.
+- PHPUnit: 11.5.58
+- PHP: 8.2.12
+- Operating System: Windows 11
+- Database: MySQL
+- Local Server: XAMPP
+
+### 9.2 Automated Test Areas
+
+The automated testing activities include:
+
 - Booking date validation.
-- Payment amount validation.
-- Room availability checking.
-- Authentication functions.
+- Booking period validation.
+- Booking overlap logic.
 
-### 9.3 Automated Test Example
+### 9.3 Booking Date Validation Tests
 
-The following is a simple standalone PHPUnit example for validating booking dates.
+The booking date validation logic was extracted into:
 
-Create:
+`config/booking_validation.php`
 
-```text
-tests/BookingDateTest.php
-```
+The tests were implemented in:
 
-```php
-<?php
+`tests/BookingDateTest.php`
 
-use PHPUnit\Framework\TestCase;
+The following tests were executed:
 
-class BookingDateTest extends TestCase
-{
-    public function testEndDateMustBeAfterStartDate(): void
-    {
-        $startDate = new DateTime('2026-09-01');
-        $endDate = new DateTime('2026-12-01');
+| Test ID | Test Description | Expected Result | Actual Result | Status |
+|---|---|---|---|---|
+| AT-01 | End date after start date | Accepted | Accepted | PASS |
+| AT-02 | Equal start and end dates | Rejected | Rejected | PASS |
+| AT-03 | End date before start date | Rejected | Rejected | PASS |
+| AT-04 | Missing booking date | Rejected | Rejected | PASS |
+| AT-05 | Invalid date format | Rejected | Rejected | PASS |
 
-        $this->assertTrue($endDate > $startDate);
-    }
+### 9.4 Automated Test Execution Results
 
-    public function testInvalidBookingDatesAreRejected(): void
-    {
-        $startDate = new DateTime('2026-12-01');
-        $endDate = new DateTime('2026-09-01');
+Command executed:
 
-        $this->assertFalse($endDate > $startDate);
-    }
-}
-```
+`.\vendor\bin\phpunit tests/BookingDateTest.php`
 
-### 9.4 Automated Testing Execution
+Execution summary:
 
-After installing PHPUnit and configuring the project:
+- PHPUnit version: 11.5.58
+- PHP version: 8.2.12
+- Tests executed: 5
+- Assertions: 5
+- Passed: 5
+- Failed: 0
 
-```bash
-vendor/bin/phpunit tests/BookingDateTest.php
-```
+Result: All five booking date validation tests passed.
 
-The execution results should be recorded after the test is actually run.
+### 9.5 Booking Overlap Testing
+
+Booking overlap testing is intended to verify that two bookings for the same room cannot occupy conflicting date periods.
+
+The following scenarios are included:
+
+| Test ID | Test Description | Expected Result |
+|---|---|---|
+| AT-06 | Overlapping booking periods | Overlap detected |
+| AT-07 | Identical booking periods | Overlap detected |
+| AT-08 | Non-overlapping booking periods | Allowed |
+| AT-09 | Back-to-back booking periods | Allowed |
+
+These scenarios must only be marked as passed after their automated tests have been executed successfully.
+
+### 9.6 Testing Limitations
+
+The completed automated date-validation tests verify the booking date validation functions. They do not independently verify the complete database booking process, concurrent booking requests, payment integration, or user authentication.
+
+Database integration and full application testing should be recorded separately.
 
 ## 10. Test Results
 
 This section records the actual outcome of testing.
 
-Use the following table during execution.
-
 | Test ID | Test Description | Actual Result | Status | Remarks |
 |---|---|---|---|---|
-| TC-01 | Valid user registration | Pending execution | Not Run | |
-| TC-02 | Duplicate email registration | Pending execution | Not Run | |
-| TC-05 | Valid user login | Pending execution | Not Run | |
-| TC-09 | Add hostel | Pending execution | Not Run | |
-| TC-13 | Add room | Pending execution | Not Run | |
-| TC-17 | Create valid booking | Pending execution | Not Run | |
-| TC-19 | Conflicting booking | Pending execution | Not Run | |
-| TC-22 | Successful payment | Pending execution | Not Run | |
-| IT-01 | Database connection | Pending execution | Not Run | |
-| ST-03 | Unauthorized administrative operation | Pending execution | Not Run | |
+| AT-01 | End date after start date | Accepted | PASS | Automated |
+| AT-02 | Equal booking dates | Rejected | PASS | Automated |
+| AT-03 | End date before start date | Rejected | PASS | Automated |
+| AT-04 | Missing booking date | Rejected | PASS | Automated |
+| AT-05 | Invalid date format | Rejected | PASS | Automated |
+| AT-06 | Overlapping booking periods | Pending execution | Not Run | |
+| AT-07 | Identical booking periods | Pending execution | Not Run | |
+| AT-08 | Non-overlapping booking periods | Pending execution | Not Run | |
+| AT-09 | Back-to-back booking periods | Pending execution | Not Run | |
 
-**Status definitions:**
+### Status Definitions
 
-- **Passed:** The actual result matches the expected result.
-- **Failed:** The actual result does not match the expected result.
-- **Not Run:** The test has not yet been executed.
-- **Blocked:** The test cannot be executed because a required feature or dependency is unavailable.
-
+- **Passed:** Actual result matches expected result.
+- **Failed:** Actual result does not match expected result.
+- **Not Run:** Test has not yet been executed.
+- **Blocked:** Test cannot be executed because a required feature or dependency is unavailable.
 
 ## 11. Defect Reporting and Management
 
@@ -347,13 +365,10 @@ Any defects discovered during testing should be documented and assigned appropri
 | DEF-01 | Description of discovered defect | High/Medium/Low | High/Medium/Low | Open/Resolved |
 | DEF-02 | Description of discovered defect | High/Medium/Low | High/Medium/Low | Open/Resolved |
 
-
 ## 12. Conclusion
 
 The HostelConnect Software Test Plan establishes a structured approach for evaluating the functionality, integration, security and usability of the system.
 
-The defined test cases provide a basis for identifying defects and verifying that the system satisfies its functional and non-functional requirements.
+Automated booking date validation tests have been executed successfully. Further testing of booking overlap logic and complete database booking operations should be conducted and documented before final project submission.
 
-Testing results will be updated as the development team executes the planned test cases. Any identified defects will be addressed and retested to improve the overall quality and reliability of HostelConnect.
-
----
+Testing results will continue to be updated as the development team executes the planned test cases.
