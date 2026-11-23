@@ -4,23 +4,47 @@ declare(strict_types=1);
 
 session_start();
 
-if (isset($_SESSION['user_id'])) {
+/*
+|--------------------------------------------------------------------------
+| Redirect Authenticated Users
+|--------------------------------------------------------------------------
+*/
+
+if (!empty($_SESSION['user_id'])) {
     header("Location: ../../index.php");
     exit;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Generate CSRF Token
+|--------------------------------------------------------------------------
+*/
+
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
+
+/*
+|--------------------------------------------------------------------------
+| Retrieve Flash Messages
+|--------------------------------------------------------------------------
+*/
 
 $error = $_SESSION['auth_error'] ?? '';
 $success = $_SESSION['auth_success'] ?? '';
 
 unset($_SESSION['auth_error'], $_SESSION['auth_success']);
 
+/*
+|--------------------------------------------------------------------------
+| Output Escaping
+|--------------------------------------------------------------------------
+*/
+
 function escapeLogin(string $value): string
 {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 ?>
@@ -33,6 +57,8 @@ function escapeLogin(string $value): string
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <meta name="description" content="Sign in to HostelConnect to explore hostels, manage accommodation bookings and access your account.">
+
     <title>Sign In | HostelConnect</title>
 
     <link rel="stylesheet" href="../../public/css/auth.css">
@@ -43,6 +69,7 @@ function escapeLogin(string $value): string
 
 <div class="auth-container">
 
+    <!-- LEFT VISUAL SECTION -->
     <section class="auth-visual">
 
         <div class="brand">
@@ -67,6 +94,7 @@ function escapeLogin(string $value): string
     </section>
 
 
+    <!-- RIGHT LOGIN SECTION -->
     <section class="auth-form-section">
 
         <div class="auth-card">
@@ -82,24 +110,27 @@ function escapeLogin(string $value): string
             </div>
 
 
-            <?php if ($error): ?>
+            <!-- ERROR MESSAGE -->
+            <?php if (!empty($error)): ?>
 
-                <div class="auth-alert error">
-                    <?= escapeLogin($error) ?>
+                <div class="auth-alert error" role="alert">
+                    <?= escapeLogin((string) $error) ?>
                 </div>
 
             <?php endif; ?>
 
 
-            <?php if ($success): ?>
+            <!-- SUCCESS MESSAGE -->
+            <?php if (!empty($success)): ?>
 
-                <div class="auth-alert success">
-                    <?= escapeLogin($success) ?>
+                <div class="auth-alert success" role="status">
+                    <?= escapeLogin((string) $success) ?>
                 </div>
 
             <?php endif; ?>
 
 
+            <!-- LOGIN FORM -->
             <form action="process_login.php" method="POST">
 
                 <input
@@ -150,6 +181,7 @@ function escapeLogin(string $value): string
             </form>
 
 
+            <!-- REGISTRATION LINK -->
             <div class="auth-switch">
 
                 Don't have an account?
