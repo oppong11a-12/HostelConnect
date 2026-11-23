@@ -7,11 +7,17 @@ requireRole(['Student']);
 
 require_once __DIR__ . '/../../config/database.php';
 
+/*
+|--------------------------------------------------------------------------
+| Student Information
+|--------------------------------------------------------------------------
+*/
+
 $userId = (int) $_SESSION['user_id'];
 
 /*
 |--------------------------------------------------------------------------
-| Generate CSRF Token
+| CSRF Token
 |--------------------------------------------------------------------------
 */
 
@@ -19,20 +25,36 @@ if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+$csrfToken = $_SESSION['csrf_token'];
+
 /*
 |--------------------------------------------------------------------------
-| Escape Output
+| Helper Functions
 |--------------------------------------------------------------------------
 */
 
-function escapeOutput(string $value): string
+function escapeOutput(mixed $value): string
 {
-    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+    return htmlspecialchars(
+        (string) ($value ?? ''),
+        ENT_QUOTES,
+        'UTF-8'
+    );
+}
+
+function paymentBadgeClass(string $status): string
+{
+    return match ($status) {
+        'Successful' => 'badge-successful',
+        'Pending' => 'badge-pending',
+        'Failed' => 'badge-failed',
+        default => 'badge-default'
+    };
 }
 
 /*
 |--------------------------------------------------------------------------
-| Retrieve Payment Messages
+| Flash Messages
 |--------------------------------------------------------------------------
 */
 
@@ -49,6 +71,13 @@ unset(
 | Retrieve Student Payment History
 |--------------------------------------------------------------------------
 */
+
+$payments = [];
+
+$totalSuccessful = 0.00;
+$totalPending = 0;
+$totalFailed = 0;
+$totalTransactions = 0;
 
 try {
 
@@ -88,7 +117,35 @@ try {
         ':student_id' => $userId
     ]);
 
-    $payments = $stmt->fetchAll();
+    $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Calculate Payment Summary
+    |--------------------------------------------------------------------------
+    */
+
+    foreach ($payments as $payment) {
+
+        $status = (string) $payment['payment_status'];
+
+        if ($status === 'Successful') {
+
+            $totalSuccessful += (float) $payment['amount'];
+
+        } elseif ($status === 'Pending') {
+
+            $totalPending++;
+
+        } elseif ($status === 'Failed') {
+
+            $totalFailed++;
+
+        }
+
+    }
+
+    $totalTransactions = count($payments);
 
 } catch (PDOException $e) {
 
@@ -96,32 +153,10 @@ try {
         'Payment history error: ' . $e->getMessage()
     );
 
-    exit('Unable to retrieve payment history.');
-}
+    http_response_code(500);
 
-/*
-|--------------------------------------------------------------------------
-| Calculate Payment Summary
-|--------------------------------------------------------------------------
-*/
+    exit('Unable to retrieve payment history. Please try again later.');
 
-$totalSuccessful = 0;
-$totalPending = 0;
-$totalFailed = 0;
-
-foreach ($payments as $payment) {
-
-    if ($payment['payment_status'] === 'Successful') {
-        $totalSuccessful += (float) $payment['amount'];
-    }
-
-    if ($payment['payment_status'] === 'Pending') {
-        $totalPending++;
-    }
-
-    if ($payment['payment_status'] === 'Failed') {
-        $totalFailed++;
-    }
 }
 
 ?>
@@ -137,191 +172,877 @@ foreach ($payments as $payment) {
 
     <title>Payment History | HostelConnect</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
     <style>
+
+        :root {
+
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+
+            --success: #15803d;
+            --warning: #d97706;
+            --danger: #dc2626;
+
+            --background: #f1f5f9;
+            --surface: #ffffff;
+
+            --border: #e2e8f0;
+
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+
+            --radius: 14px;
+
+        }
 
         * {
             box-sizing: border-box;
         }
 
         body {
+
             margin: 0;
-            padding: 25px;
-            font-family: Arial, sans-serif;
-            background: #f4f7fb;
-            color: #263238;
+
+            background: var(--background);
+
+            font-family: 'Inter', sans-serif;
+
+            color: var(--text-dark);
+
         }
+
+        a {
+            text-decoration: none;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        /* =================================
+           TOP NAVIGATION
+        ================================= */
+
+        .topbar {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 17px 6%;
+
+            background: var(--surface);
+
+            border-bottom: 1px solid var(--border);
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+
+        }
+
+        .brand {
+
+            font-size: 23px;
+
+            font-weight: 800;
+
+            color: var(--text-dark);
+
+            letter-spacing: -1px;
+
+        }
+
+        .brand span {
+            color: var(--primary);
+        }
+
+        .nav-actions {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+        }
+
+        .nav-btn {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 10px 16px;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            transition: .25s ease;
+
+        }
+
+        .home-btn {
+
+            background: #eff6ff;
+
+            color: var(--primary);
+
+        }
+
+        .home-btn:hover {
+            background: #dbeafe;
+        }
+
+        .bookings-btn {
+
+            background: #f1f5f9;
+
+            color: #475569;
+
+        }
+
+        .bookings-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .logout-btn {
+
+            background: #fee2e2;
+
+            color: var(--danger);
+
+        }
+
+        .logout-btn:hover {
+            background: #fecaca;
+        }
+
+        /* =================================
+           MAIN CONTAINER
+        ================================= */
 
         .container {
-            max-width: 1150px;
-            margin: auto;
+
+            max-width: 1200px;
+
+            margin: 40px auto;
+
+            padding: 0 22px;
+
         }
 
-        .header {
+        /* =================================
+           PAGE HEADER
+        ================================= */
+
+        .page-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
-            gap: 15px;
+
             flex-wrap: wrap;
-            margin-bottom: 25px;
+
+            gap: 15px;
+
+            margin-bottom: 28px;
+
         }
 
-        .header h1 {
-            margin: 0 0 8px;
+        .page-header h1 {
+
+            margin: 0 0 9px;
+
+            font-size: 30px;
+
+            font-weight: 800;
+
+            letter-spacing: -1px;
+
         }
 
-        .header p {
+        .page-header p {
+
             margin: 0;
-            color: #64748b;
+
+            color: var(--text-muted);
+
+            font-size: 14px;
+
+            line-height: 1.6;
+
         }
 
-        .back-button {
-            display: inline-block;
-            padding: 11px 18px;
-            background: #263b80;
-            color: white;
-            text-decoration: none;
-            border-radius: 7px;
+        .transaction-count {
+
+            padding: 9px 14px;
+
+            background: #eff6ff;
+
+            color: var(--primary);
+
+            border-radius: 30px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
         }
+
+        /* =================================
+           SUMMARY CARDS
+        ================================= */
 
         .summary {
+
             display: grid;
+
             grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-bottom: 25px;
+
+            gap: 20px;
+
+            margin-bottom: 30px;
+
         }
 
         .summary-card {
-            background: white;
-            padding: 22px;
-            border-radius: 10px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+
+            background: var(--surface);
+
+            padding: 23px;
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            box-shadow: 0 4px 15px rgba(15, 23, 42, .035);
+
+            transition: .25s ease;
+
+        }
+
+        .summary-card:hover {
+
+            transform: translateY(-4px);
+
+            box-shadow: 0 10px 25px rgba(15, 23, 42, .07);
+
+        }
+
+        .summary-top {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 18px;
+
+        }
+
+        .summary-icon {
+
+            width: 43px;
+
+            height: 43px;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            border-radius: 11px;
+
+            font-size: 21px;
+
+        }
+
+        .icon-success {
+            background: #dcfce7;
+        }
+
+        .icon-pending {
+            background: #fef3c7;
+        }
+
+        .icon-failed {
+            background: #fee2e2;
         }
 
         .summary-card h3 {
-            margin: 0 0 12px;
-            color: #64748b;
-            font-size: 14px;
+
+            margin: 0;
+
+            font-size: 13px;
+
+            color: var(--text-muted);
+
+            font-weight: 600;
+
         }
 
         .summary-card strong {
-            font-size: 24px;
+
+            font-size: 25px;
+
+            font-weight: 800;
+
+            letter-spacing: -.5px;
+
         }
 
         .success-text {
-            color: #15803d;
+            color: var(--success);
         }
 
         .pending-text {
-            color: #d97706;
+            color: var(--warning);
         }
 
         .failed-text {
-            color: #dc2626;
+            color: var(--danger);
         }
 
+        /* =================================
+           FLASH MESSAGES
+        ================================= */
+
         .message {
-            padding: 14px;
-            border-radius: 7px;
-            margin-bottom: 18px;
+
+            padding: 15px 18px;
+
+            border-radius: 9px;
+
+            margin-bottom: 22px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
         }
 
         .success-message {
+
             background: #dcfce7;
+
             color: #166534;
+
+            border: 1px solid #bbf7d0;
+
         }
 
         .error-message {
+
             background: #fee2e2;
+
             color: #991b1b;
+
+            border: 1px solid #fecaca;
+
         }
 
+        /* =================================
+           TRANSACTION TABLE
+        ================================= */
+
         .table-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
+
+            background: var(--surface);
+
+            border: 1px solid var(--border);
+
+            border-radius: var(--radius);
+
+            padding: 25px;
+
+            box-shadow: 0 4px 15px rgba(15, 23, 42, .035);
+
+        }
+
+        .table-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+            margin-bottom: 22px;
+
+        }
+
+        .table-header h2 {
+
+            margin: 0;
+
+            font-size: 19px;
+
+            font-weight: 800;
+
+        }
+
+        .table-header p {
+
+            margin: 6px 0 0;
+
+            color: var(--text-muted);
+
+            font-size: 12px;
+
+        }
+
+        .table-wrapper {
+            width: 100%;
             overflow-x: auto;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
         }
 
         table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 850px;
-        }
 
-        th, td {
-            padding: 14px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
+            width: 100%;
+
+            border-collapse: collapse;
+
+            min-width: 950px;
+
         }
 
         th {
+
+            padding: 15px 13px;
+
             background: #f8fafc;
+
             color: #475569;
+
+            text-align: left;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+
+            white-space: nowrap;
+
         }
 
+        td {
+
+            padding: 16px 13px;
+
+            border-bottom: 1px solid var(--border);
+
+            font-size: 13px;
+
+            color: #334155;
+
+            vertical-align: middle;
+
+        }
+
+        tbody tr {
+            transition: .2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .payment-id {
+
+            font-weight: 800;
+
+            color: var(--primary);
+
+        }
+
+        .hostel-name {
+
+            font-weight: 700;
+
+            color: var(--text-dark);
+
+        }
+
+        .room-info {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 5px;
+
+        }
+
+        .room-number {
+
+            font-weight: 700;
+
+            color: var(--text-dark);
+
+        }
+
+        .room-type {
+
+            color: var(--text-muted);
+
+            font-size: 11px;
+
+        }
+
+        .amount {
+
+            font-weight: 800;
+
+            color: var(--success);
+
+            white-space: nowrap;
+
+        }
+
+        .reference {
+
+            font-size: 11px;
+
+            color: var(--text-muted);
+
+            overflow-wrap: anywhere;
+
+            max-width: 150px;
+
+        }
+
+        /* =================================
+           PAYMENT BADGES
+        ================================= */
+
         .badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            padding: 7px 11px;
+
+            border-radius: 30px;
+
+            font-size: 11px;
+
+            font-weight: 800;
+
+            white-space: nowrap;
+
         }
 
         .badge-successful {
+
             background: #dcfce7;
+
             color: #166534;
+
         }
 
         .badge-pending {
+
             background: #fef3c7;
+
             color: #92400e;
+
         }
 
         .badge-failed {
+
             background: #fee2e2;
+
             color: #991b1b;
+
         }
 
+        .badge-default {
+
+            background: #e2e8f0;
+
+            color: #475569;
+
+        }
+
+        /* =================================
+           ACTION BUTTONS
+        ================================= */
+
         .action-button {
-            display: inline-block;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
             padding: 9px 12px;
+
             border: none;
-            border-radius: 6px;
-            background: #263b80;
+
+            border-radius: 7px;
+
+            background: var(--primary);
+
             color: white;
+
             cursor: pointer;
-            font-size: 13px;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+
+            transition: .25s ease;
+
         }
 
         .action-button:hover {
-            background: #1e2f68;
+
+            background: var(--primary-dark);
+
+        }
+
+        .action-button:disabled {
+
+            opacity: .6;
+
+            cursor: not-allowed;
+
         }
 
         .retry-button {
-            display: inline-block;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
             padding: 9px 12px;
-            border-radius: 6px;
-            background: #15803d;
+
+            border-radius: 7px;
+
+            background: var(--success);
+
             color: white;
-            text-decoration: none;
-            font-size: 13px;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+
+            transition: .25s ease;
+
         }
+
+        .retry-button:hover {
+            background: #166534;
+        }
+
+        /* =================================
+           EMPTY STATE
+        ================================= */
 
         .empty-state {
+
             text-align: center;
-            padding: 35px;
-            color: #64748b;
+
+            padding: 55px 20px;
+
         }
 
-        @media (max-width: 700px) {
+        .empty-icon {
 
-            body {
-                padding: 15px;
+            width: 75px;
+
+            height: 75px;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            margin: 0 auto 20px;
+
+            background: #eff6ff;
+
+            border-radius: 50%;
+
+            font-size: 32px;
+
+        }
+
+        .empty-state h3 {
+
+            margin: 0 0 10px;
+
+            font-size: 20px;
+
+        }
+
+        .empty-state p {
+
+            color: var(--text-muted);
+
+            font-size: 14px;
+
+            line-height: 1.7;
+
+            margin-bottom: 22px;
+
+        }
+
+        .explore-btn {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 12px 20px;
+
+            background: var(--primary);
+
+            color: white;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            transition: .25s ease;
+
+        }
+
+        .explore-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* =================================
+           FOOTER
+        ================================= */
+
+        .footer {
+
+            text-align: center;
+
+            padding: 30px 15px;
+
+            color: var(--text-muted);
+
+            font-size: 12px;
+
+        }
+
+        /* =================================
+           RESPONSIVE DESIGN
+        ================================= */
+
+        @media (max-width: 850px) {
+
+            .summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .topbar {
+                padding: 14px 4%;
+            }
+
+            .brand {
+                font-size: 18px;
+            }
+
+            .nav-actions {
+                gap: 6px;
+            }
+
+            .nav-btn {
+                padding: 9px 10px;
+                font-size: 10px;
+            }
+
+            .container {
+                margin: 28px auto;
+                padding: 0 14px;
+            }
+
+            .page-header h1 {
+                font-size: 25px;
             }
 
             .summary {
                 grid-template-columns: 1fr;
+                gap: 13px;
+            }
+
+            .summary-card {
+                padding: 19px;
+            }
+
+            .table-container {
+                padding: 17px;
+            }
+
+            .table-header h2 {
+                font-size: 17px;
+            }
+
+        }
+
+        @media (max-width: 380px) {
+
+            .brand {
+                font-size: 15px;
+            }
+
+            .nav-btn {
+                padding: 8px;
+                font-size: 9px;
             }
 
         }
@@ -332,236 +1053,470 @@ foreach ($payments as $payment) {
 
 <body>
 
-<div class="container">
 
-    <div class="header">
+<!-- =================================
+     NAVIGATION
+================================== -->
+
+<header class="topbar">
+
+    <a href="../../index.php" class="brand">
+        Hostel<span>Connect.</span>
+    </a>
+
+    <nav class="nav-actions">
+
+        <a href="../../index.php" class="nav-btn home-btn">
+            ← Home
+        </a>
+
+        <a href="../student/my_bookings.php" class="nav-btn bookings-btn">
+            My Bookings
+        </a>
+
+        <a href="../authentication/logout.php" class="nav-btn logout-btn">
+            Sign Out
+        </a>
+
+    </nav>
+
+</header>
+
+
+<!-- =================================
+     MAIN CONTENT
+================================== -->
+
+<main class="container">
+
+
+    <!-- PAGE HEADER -->
+
+    <section class="page-header">
 
         <div>
 
             <h1>Payment History</h1>
 
-            <p>View and manage your HostelConnect transactions.</p>
+            <p>
+                Monitor your transactions, review payment records
+                and manage outstanding payments.
+            </p>
 
         </div>
 
-        <a href="../../index.php" class="back-button">
-            Back to Dashboard
-        </a>
+        <div class="transaction-count">
 
-    </div>
+            <?= $totalTransactions ?>
+            Transaction<?= $totalTransactions !== 1 ? 's' : '' ?>
+
+        </div>
+
+    </section>
+
+
+    <!-- FLASH MESSAGES -->
 
     <?php if ($successMessage): ?>
 
         <div class="message success-message">
-            <?= escapeOutput((string) $successMessage) ?>
+
+            ✓ <?= escapeOutput($successMessage) ?>
+
         </div>
 
     <?php endif; ?>
+
 
     <?php if ($errorMessage): ?>
 
         <div class="message error-message">
-            <?= escapeOutput((string) $errorMessage) ?>
+
+            ⚠ <?= escapeOutput($errorMessage) ?>
+
         </div>
 
     <?php endif; ?>
 
-    <div class="summary">
 
-        <div class="summary-card">
+    <!-- =================================
+         PAYMENT SUMMARY
+    ================================== -->
 
-            <h3>Total Successful Payments</h3>
+    <section class="summary">
+
+
+        <!-- SUCCESSFUL PAYMENTS -->
+
+        <article class="summary-card">
+
+            <div class="summary-top">
+
+                <h3>Successful Payments</h3>
+
+                <div class="summary-icon icon-success">
+                    ✓
+                </div>
+
+            </div>
 
             <strong class="success-text">
-                GHS <?= number_format($totalSuccessful, 2) ?>
+
+                GH₵ <?= number_format($totalSuccessful, 2) ?>
+
             </strong>
 
-        </div>
+        </article>
 
-        <div class="summary-card">
 
-            <h3>Pending Transactions</h3>
+        <!-- PENDING PAYMENTS -->
+
+        <article class="summary-card">
+
+            <div class="summary-top">
+
+                <h3>Pending Transactions</h3>
+
+                <div class="summary-icon icon-pending">
+                    ◷
+                </div>
+
+            </div>
 
             <strong class="pending-text">
+
                 <?= $totalPending ?>
+
             </strong>
 
-        </div>
+        </article>
 
-        <div class="summary-card">
 
-            <h3>Failed Transactions</h3>
+        <!-- FAILED PAYMENTS -->
+
+        <article class="summary-card">
+
+            <div class="summary-top">
+
+                <h3>Failed Transactions</h3>
+
+                <div class="summary-icon icon-failed">
+                    !
+                </div>
+
+            </div>
 
             <strong class="failed-text">
+
                 <?= $totalFailed ?>
+
             </strong>
 
-        </div>
+        </article>
 
-    </div>
 
-    <div class="table-container">
+    </section>
 
-        <h2>Transaction Records</h2>
 
-        <?php if (empty($payments)): ?>
+    <!-- =================================
+         TRANSACTION RECORDS
+    ================================== -->
 
-            <div class="empty-state">
+    <section class="table-container">
 
-                <h3>No Payment Records</h3>
+        <div class="table-header">
+
+            <div>
+
+                <h2>Transaction Records</h2>
 
                 <p>
-                    You have not made any payment transactions yet.
+                    A complete record of your hostel payment activities.
                 </p>
 
             </div>
 
+        </div>
+
+
+        <?php if (empty($payments)): ?>
+
+
+            <!-- EMPTY STATE -->
+
+            <div class="empty-state">
+
+                <div class="empty-icon">
+                    💳
+                </div>
+
+                <h3>No Payment Records</h3>
+
+                <p>
+                    You haven't made any payment transactions yet.
+                    Your payment history will appear here once you make a reservation.
+                </p>
+
+                <a
+                    href="../hostels/browse_hostels.php"
+                    class="explore-btn"
+                >
+                    Explore Hostels
+                </a>
+
+            </div>
+
+
         <?php else: ?>
 
-            <table>
 
-                <thead>
+            <div class="table-wrapper">
 
-                    <tr>
+                <table>
 
-                        <th>Payment ID</th>
-
-                        <th>Hostel</th>
-
-                        <th>Room</th>
-
-                        <th>Amount</th>
-
-                        <th>Reference</th>
-
-                        <th>Status</th>
-
-                        <th>Date</th>
-
-                        <th>Action</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    <?php foreach ($payments as $payment): ?>
+                    <thead>
 
                         <tr>
 
-                            <td>
-                                <?= (int) $payment['payment_id'] ?>
-                            </td>
+                            <th>Payment ID</th>
 
-                            <td>
-                                <?= escapeOutput($payment['hostel_name']) ?>
-                            </td>
+                            <th>Hostel</th>
 
-                            <td>
-                                <?= escapeOutput($payment['room_number']) ?>
-                            </td>
+                            <th>Room</th>
 
-                            <td>
-                                GHS <?= number_format((float) $payment['amount'], 2) ?>
-                            </td>
+                            <th>Amount</th>
 
-                            <td>
-                                <?= escapeOutput($payment['payment_reference']) ?>
-                            </td>
+                            <th>Reference</th>
 
-                            <td>
+                            <th>Status</th>
 
-                                <?php
+                            <th>Date</th>
 
-                                $status = $payment['payment_status'];
-
-                                $badgeClass = match ($status) {
-                                    'Successful' => 'badge-successful',
-                                    'Pending' => 'badge-pending',
-                                    'Failed' => 'badge-failed',
-                                    default => 'badge-pending'
-                                };
-
-                                ?>
-
-                                <span class="badge <?= $badgeClass ?>">
-                                    <?= escapeOutput($status) ?>
-                                </span>
-
-                            </td>
-
-                            <td>
-
-                                <?= $payment['payment_date']
-                                    ? escapeOutput($payment['payment_date'])
-                                    : 'Not completed' ?>
-
-                            </td>
-
-                            <td>
-
-                                <?php if ($status === 'Pending'): ?>
-
-                                    <form
-                                        method="POST"
-                                        action="verify_payment.php"
-                                    >
-
-                                        <input
-                                            type="hidden"
-                                            name="reference"
-                                            value="<?= escapeOutput($payment['payment_reference']) ?>"
-                                        >
-
-                                        <input
-                                            type="hidden"
-                                            name="csrf_token"
-                                            value="<?= escapeOutput($_SESSION['csrf_token']) ?>"
-                                        >
-
-                                        <button
-                                            type="submit"
-                                            class="action-button"
-                                        >
-                                            Check Status
-                                        </button>
-
-                                    </form>
-
-                                <?php elseif (
-                                    $status === 'Failed' &&
-                                    $payment['booking_status'] === 'Pending'
-                                ): ?>
-
-                                    <a
-                                        class="retry-button"
-                                        href="pay_now.php?booking_id=<?= (int) $payment['booking_id'] ?>"
-                                    >
-                                        Retry Payment
-                                    </a>
-
-                                <?php else: ?>
-
-                                    <span>—</span>
-
-                                <?php endif; ?>
-
-                            </td>
+                            <th>Action</th>
 
                         </tr>
 
-                    <?php endforeach; ?>
+                    </thead>
 
-                </tbody>
 
-            </table>
+                    <tbody>
+
+                        <?php foreach ($payments as $payment): ?>
+
+                            <?php
+
+                                $status = (string) $payment['payment_status'];
+
+                                $badgeClass = paymentBadgeClass($status);
+
+                                $bookingId = (int) $payment['booking_id'];
+
+                                $paymentId = (int) $payment['payment_id'];
+
+                            ?>
+
+
+                            <tr>
+
+
+                                <!-- PAYMENT ID -->
+
+                                <td>
+
+                                    <span class="payment-id">
+
+                                        #<?= $paymentId ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- HOSTEL -->
+
+                                <td>
+
+                                    <span class="hostel-name">
+
+                                        <?= escapeOutput($payment['hostel_name']) ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ROOM -->
+
+                                <td>
+
+                                    <div class="room-info">
+
+                                        <span class="room-number">
+
+                                            <?= escapeOutput($payment['room_number']) ?>
+
+                                        </span>
+
+                                        <span class="room-type">
+
+                                            <?= escapeOutput($payment['room_type']) ?>
+
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- AMOUNT -->
+
+                                <td>
+
+                                    <span class="amount">
+
+                                        GH₵ <?= number_format((float) $payment['amount'], 2) ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- PAYMENT REFERENCE -->
+
+                                <td>
+
+                                    <span class="reference">
+
+                                        <?= escapeOutput($payment['payment_reference'] ?? 'Not available') ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- PAYMENT STATUS -->
+
+                                <td>
+
+                                    <span class="badge <?= $badgeClass ?>">
+
+                                        <?= escapeOutput($status) ?>
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- PAYMENT DATE -->
+
+                                <td>
+
+                                    <?= !empty($payment['payment_date'])
+                                        ? escapeOutput($payment['payment_date'])
+                                        : 'Not completed' ?>
+
+                                </td>
+
+
+                                <!-- PAYMENT ACTION -->
+
+                                <td>
+
+
+                                    <?php if ($status === 'Pending'): ?>
+
+
+                                        <form
+                                            method="POST"
+                                            action="verify_payment.php"
+                                            onsubmit="const button = this.querySelector('button'); button.disabled = true; button.textContent = 'Checking...';"
+                                        >
+
+                                            <input
+                                                type="hidden"
+                                                name="reference"
+                                                value="<?= escapeOutput($payment['payment_reference']) ?>"
+                                            >
+
+                                            <input
+                                                type="hidden"
+                                                name="csrf_token"
+                                                value="<?= escapeOutput($csrfToken) ?>"
+                                            >
+
+                                            <button
+                                                type="submit"
+                                                class="action-button"
+                                            >
+
+                                                Check Status
+
+                                            </button>
+
+                                        </form>
+
+
+                                    <?php elseif (
+                                        $status === 'Failed'
+                                        && $payment['booking_status'] === 'Pending'
+                                    ): ?>
+
+
+                                        <a
+                                            class="retry-button"
+                                            href="pay_now.php?booking_id=<?= $bookingId ?>"
+                                        >
+
+                                            Retry Payment
+
+                                        </a>
+
+
+                                    <?php else: ?>
+
+
+                                        <span>—</span>
+
+
+                                    <?php endif; ?>
+
+
+                                </td>
+
+
+                            </tr>
+
+
+                        <?php endforeach; ?>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
 
         <?php endif; ?>
 
-    </div>
 
-</div>
+    </section>
+
+
+</main>
+
+
+<!-- =================================
+     FOOTER
+================================== -->
+
+<footer class="footer">
+
+    &copy; <?= date('Y') ?> HostelConnect.
+
+    All rights reserved.
+
+</footer>
+
 
 </body>
 
