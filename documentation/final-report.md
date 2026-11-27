@@ -45,6 +45,17 @@ The implemented scope covers authentication, hostel discovery and management, ro
 
 The team organised work using an Agile approach and an eight-week project schedule divided into three sprints: requirements and project foundation; core development and integration; and testing, stabilisation and final submission. GitHub branches, commits and pull requests were used to coordinate contributions and integrate changes.
 
+### 5.1 Team Roles and Responsibilities
+
+The project was completed through collaboration among four team members, with responsibilities assigned to support project coordination, system development, testing and documentation.
+
+- **Project Manager:** Coordinated project activities, monitored progress, managed repository integration and supervised the overall project.
+- **Lead Developer:** Led the implementation of the application and contributed to the system's technical development.
+- **Tester:** Prepared the software test plan, conducted tests, documented test results and supported defect identification.
+- **Documentation Lead:** Prepared and organised the Software Requirements Specification, system design documents, diagrams and final project documentation.
+
+GitHub was used to manage source-code contributions through branches, commits and pull requests.
+
 ## 6. System Design and Technology
 
 HostelConnect follows a web-based client-server structure. The browser presents the user interface, PHP processes application requests and MySQL/MariaDB stores system records. PDO is used for database access. The application separates authentication, role checks, hostel management, room management, bookings and payments into organised project modules.
